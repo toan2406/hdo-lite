@@ -2,6 +2,7 @@
 const request = require('superagent')
 const cheerio = require('cheerio')
 const srt2vtt = require('srt2vtt')
+const url = require('url')
 const kebabCase = require('lodash/kebabCase')
 
 const DOMAIN = 'http://hdonline.vn'
@@ -31,8 +32,7 @@ exports.watch = function (req, res, next) {
   _findMedia(req.params.slug)
     .then((media) => {
       res.render('watch', {
-        source: media['720'],
-        subfile: media.subfile
+        media: JSON.stringify(media)
       })
     })
     .catch((err) => {
@@ -41,6 +41,10 @@ exports.watch = function (req, res, next) {
 }
 
 exports.sub = function (req, res, next) {
+  if (!req.query.url) {
+    return res.sendStatus(200)
+  }
+
   request
     .get(req.query.url)
     .buffer(true)
@@ -53,6 +57,14 @@ exports.sub = function (req, res, next) {
         res.send(data.toString())
       })
     })
+    .catch(() => {
+      res.sendStatus(200)
+    })
+}
+
+exports.stream = function (req, res, next) {
+  const hlsStreamUrl = req.originalUrl.replace('/api/stream/', 'http://')
+  req.pipe(request.get(hlsStreamUrl)).pipe(res)
 }
 
 function _search (key) {
@@ -110,17 +122,40 @@ function _parseSourceFile (html) {
 
 function _parseMedia (xml) {
   const isVsub = (file) => file.includes('VIE')
+  const isEsub = (file) => file.includes('ENG')
   const $ = cheerio.load(xml, { xmlMode: true })
-  let media = {}
+
+  let media = {
+    source: {},
+    subtitle: {}
+  }
 
   $('item').find('*').each((i, elem) => {
-    if (elem.name.includes('level')) {
-      media[elem.name.match(/\d+/g)] = $(elem).text()
+    if (elem.name.includes('jwplayer:file')) {
+      const streamUrl = $(elem).text()
+      const urlObj = url.parse(streamUrl)
+
+      if (streamUrl.includes('m3u8')) {
+        media.source.hls = `/api/stream/${urlObj.host + urlObj.path}`
+      }
+
+      if (streamUrl.includes('mp4')) {
+        media.source.mp4 = streamUrl
+      }
     }
 
-    if (elem.name.includes('subfile')) {
-      const vsub = $(elem).text().split(',').find(isVsub)
-      media.subfile = `/api/sub?url=${encodeURIComponent(vsub)}`
+    if (elem.name.includes('jwplayer:vplugin.level')) {
+      const streamUrl = $(elem).text()
+      const resolution = elem.name.match(/\d+/g)
+      media.source['r' + resolution] = streamUrl
+    }
+
+    if (elem.name.includes('jwplayer:vplugin.subfile')) {
+      const subFiles = $(elem).text().split(',')
+      const vsub = subFiles.find(isVsub)
+      const esub = subFiles.find(isEsub)
+      media.subtitle.vi = `/api/sub?url=${encodeURIComponent(vsub)}`
+      media.subtitle.en = `/api/sub?url=${encodeURIComponent(esub)}`
     }
   })
 

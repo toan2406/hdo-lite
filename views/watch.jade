@@ -1,6 +1,34 @@
 extends layout
 
 block content
-  video(class='player', autoplay, controls)
-    source(src=source, type='video/mp4')
-    track(label='Vietnamese', kind='subtitles', srclang='vi', src=subfile, default)
+  script(src='https://cdn.jsdelivr.net/hls.js/latest/hls.min.js')
+  video(id='player', class='player', controls)
+    track(id='subtitle-vi', label='Vietnamese', kind='subtitles', srclang='vi', default)
+    track(id='subtitle-en', label='English', kind='subtitles', srclang='en')
+
+  script.
+    var media = !{media}
+      , hlsStream = media.source.hls
+      , mp4Stream = media.source.r1080 || media.source.r720 || media.source.mp4
+      , player = document.getElementById('player')
+      , viSub= document.getElementById('subtitle-vi')
+      , enSub = document.getElementById('subtitle-en')
+      
+    viSub.src = media.subtitle.vi
+    enSub.src = media.subtitle.en
+    
+    if (hlsStream && Hls.isSupported()) {
+        var hls = new Hls()
+        hls.loadSource(hlsStream)
+        hls.attachMedia(player)
+        hls.on(Hls.Events.MANIFEST_PARSED, function () {
+          player.play()
+        })
+    }
+    else if (mp4Stream) {
+      player.src = mp4Stream
+      player.load()
+      player.play()
+    }
+    
+    console.log(media)
