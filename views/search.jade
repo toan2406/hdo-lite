@@ -1,0 +1,8 @@
+extends layout
+
+block content
+  ul(class='search-results')
+    each video in videos
+      li
+        a(href=video.link) #{video.title.vi} - #{video.title.en}
+  

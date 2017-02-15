@@ -1,8 +1,16 @@
 doctype html
 html
   head
-    title= title
+    title HDO Lite
     link(rel='stylesheet', href='/stylesheets/style.css')
   body
-    h1= title
-    block content
+    header(class='header')
+      div(class='container')
+        h2(class='brand') HDO Lite
+        form(class='form-search', action='/search')
+          input(class='button-search', type='submit', value='Search')
+          input(class='text-field', type='text', name='key')
+
+    main
+      div(class='container')
+        block content

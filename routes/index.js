@@ -1,9 +1,9 @@
-var express = require('express');
-var router = express.Router();
+var express = require('express')
+var router = express.Router()
+const hdo = require('./hdo')
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
-  res.render('index', { title: 'HDO Lite' });
-});
+router.get('/', hdo.home)
+router.get('/search', hdo.search)
+router.get('/watch/:slug', hdo.watch)
 
-module.exports = router;
+module.exports = router

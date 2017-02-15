@@ -1,8 +1,68 @@
 body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  margin: 0;
+  font: 16px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 a {
   color: #00B7FF;
+}
+
+.header {
+  height: 70px;
+}
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 960px;
+  height: 100%;
+  padding: 0 20px;
+  margin: 0 auto;
+}
+
+.brand {
+  margin: 0;
+}
+
+.form-search {
+
+}
+
+.text-field {
+  display: block;
+  padding: 5px 10px;
+  margin-right: 80px;
+  font-size: 16px;
+  background: transparent;
+  border: solid thin #CCC;
+  border-right: none;
+}
+
+.button-search {
+  float: right;
+  width: 80px;
+  padding: 5px 10px;
+  margin-left: -1px;
+  font-size: 16px;
+  background: transparent;
+  border: solid thin #CCC;
+}
+
+.player {
+  width: 100%;
+}
+
+.search-results {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.search-results > li {
+  margin: 5px 0;
 }
