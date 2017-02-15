@@ -1,6 +1,7 @@
 /* eslint-disable no-eval, no-unused-vars */
 const request = require('superagent')
 const cheerio = require('cheerio')
+const srt2vtt = require('srt2vtt')
 const kebabCase = require('lodash/kebabCase')
 
 const DOMAIN = 'http://hdonline.vn'
@@ -30,11 +31,27 @@ exports.watch = function (req, res, next) {
   _findMedia(req.params.slug)
     .then((media) => {
       res.render('watch', {
-        source: media['720']
+        source: media['720'],
+        subfile: media.subfile
       })
     })
     .catch((err) => {
       next(err)
+    })
+}
+
+exports.sub = function (req, res, next) {
+  request
+    .get(req.query.url)
+    .buffer(true)
+    .then((res) => {
+      return res.body
+    })
+    .then((buffer) => {
+      srt2vtt(buffer, 'utf16le', function (err, data) {
+        if (err) throw new Error(err)
+        res.send(data.toString())
+      })
     })
 }
 
@@ -82,9 +99,9 @@ function _parseVideos (html) {
 }
 
 function _parseSourceFile (html) {
-  const includesEval = (line) => line.includes('eval')
+  const hasEval = (line) => line.includes('eval')
   const jwplayer = (element) => ({ setup: (config) => config })
-  const evalLine = html.split('\n').find(includesEval)
+  const evalLine = html.split('\n').find(hasEval)
   const jwplayerConfig = eval(evalLine)
   const sourceFile = jwplayerConfig.playlist[0].file
 
@@ -92,12 +109,18 @@ function _parseSourceFile (html) {
 }
 
 function _parseMedia (xml) {
+  const isVsub = (file) => file.includes('VIE')
   const $ = cheerio.load(xml, { xmlMode: true })
   let media = {}
 
   $('item').find('*').each((i, elem) => {
-    if (elem.name.includes('jwplayer:vplugin.level')) {
+    if (elem.name.includes('level')) {
       media[elem.name.match(/\d+/g)] = $(elem).text()
+    }
+
+    if (elem.name.includes('subfile')) {
+      const vsub = $(elem).text().split(',').find(isVsub)
+      media.subfile = `/api/sub?url=${encodeURIComponent(vsub)}`
     }
   })
 

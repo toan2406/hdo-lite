@@ -1,4 +1,6 @@
 extends layout
 
 block content
-  video(class='player', src=source, autoplay, controls)
+  video(class='player', autoplay, controls)
+    source(src=source, type='video/mp4')
+    track(label='Vietnamese', kind='subtitles', srclang='vi', src=subfile, default)
