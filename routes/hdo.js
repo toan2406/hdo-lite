@@ -19,6 +19,8 @@ exports.home = function (req, res, next) {
 exports.search = function (req, res, next) {
   _search(req.query.key)
     .then((videos) => {
+      console.log('==========')
+      console.log(videos)
       res.render('search', {
         videos: videos
       })
@@ -69,10 +71,16 @@ exports.stream = function (req, res, next) {
 
 function _search (key) {
   const hdoSearchUrl = `${DOMAIN}/tim-kiem/${kebabCase(key)}.html`
+  console.log('==========')
+  console.log(hdoSearchUrl)
 
   return request
     .get(hdoSearchUrl)
-    .then((res) => _parseVideos(res.text))
+    .then((res) => {
+      console.log('==========')
+      console.log(res.text)
+      return _parseVideos(res.text)
+    })
 }
 
 function _findMedia (slug) {
